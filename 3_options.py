@@ -13,7 +13,7 @@ from rich.console import Console
 from cli_tools import parser, print_rich_message, parse_and_print_message, print_anthropic_env
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 async def main():
     print_anthropic_env("当前 Anthropic 环境变量")
