@@ -1,6 +1,10 @@
 """
-CLI tools and convenience functions for working with the Claude Agent SDK in the terminal.
+在终端中配合 Claude Agent SDK 使用的 CLI 工具与便捷函数集合。
 """
+
+import os
+import argparse
+import json
 
 from claude_agent_sdk import (
     AssistantMessage, 
@@ -22,24 +26,40 @@ from rich.prompt import Prompt
 from rich.syntax import Syntax
 from dotenv import load_dotenv
 from typing import Literal
-import argparse
-import json
+
 load_dotenv()
+
+ANTHROPIC_ENV_KEYS = [
+    "ANTHROPIC_BASE_URL",
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_AUTH_TOKEN",
+    "ANTHROPIC_MODEL",
+]
+
+def print_anthropic_env(label: str) -> None:
+    """打印 Anthropic 相关关键环境变量的值。"""
+    print(f"{label}：")
+    for key in ANTHROPIC_ENV_KEYS:
+        value = os.getenv(key)
+        if value is None:
+            print(f"{key}=<未设置>")
+        else:
+            print(f"{key}={value}")
 
 
 # --------------------------------
-# Parse runtime args from CLI
+# 解析命令行运行参数
 # --------------------------------
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--stats", "-s", default="False", help="Print session stats")
-parser.add_argument("--model", "-m", default="sonnet", help="Model to use")
-parser.add_argument("--output-style", "-os", default="Personal Assistant", help="Output style to use")
-parser.add_argument("--print-raw", "-pr", default="False", help="Print raw messages")
+parser.add_argument("--stats", "-s", default="False", help="是否打印会话统计")
+parser.add_argument("--model", "-m", default="haiku", help="要使用的模型名称")
+parser.add_argument("--output-style", "-os", default="Personal Assistant", help="期望使用的输出风格")
+parser.add_argument("--print-raw", "-pr", default="False", help="是否打印原始消息")
 
 
 # --------------------------------
-# Convenience functions for printing messages
+# 打印消息的辅助函数
 # --------------------------------
 
 def print_rich_message(
@@ -48,7 +68,7 @@ def print_rich_message(
         console: Console
         ):
     """
-    Prints a message in a panel with a title and border color based on the message type.
+    根据消息类型，使用带标题与边框颜色的面板打印内容。
     """
     styles = {
         "user": {
@@ -77,7 +97,7 @@ def print_rich_message(
             "border_style": "cyan"}
     }
 
-    # For tool results, try to apply JSON syntax highlighting
+    # 对工具结果尝试启用 JSON 语法高亮
     if type == "tool_result" and is_json_string(message):
         panel_content = Syntax(message, "json", theme="monokai", line_numbers=False)
     else:
@@ -99,7 +119,7 @@ def print_rich_message(
 
 
 def is_json_string(text: str) -> bool:
-    """Check if a string is valid JSON"""
+    """判断字符串是否为合法 JSON"""
     try:
         json.loads(text)
         return True
@@ -109,42 +129,41 @@ def is_json_string(text: str) -> bool:
 
 def format_tool_result(content) -> str:
     """
-    Format tool result content nicely, handling nested JSON strings.
+    对工具返回内容进行友好格式化，兼容嵌套的 JSON 字符串。
     """
     if isinstance(content, str):
-        # Try to parse as JSON and format it
+        # 尝试按 JSON 解析并格式化
         try:
             parsed = json.loads(content)
             return json.dumps(parsed, indent=2)
         except json.JSONDecodeError:
             return content
     elif isinstance(content, list):
-        # Handle list of content blocks (common format)
+        # 处理内容块列表（常见结构）
         formatted_parts = []
         for item in content:
             if isinstance(item, dict) and "text" in item:
-                # Try to parse the text field as JSON
+                # 解析 text 字段中的 JSON
                 text_content = item["text"]
                 try:
                     parsed_json = json.loads(text_content)
                     formatted_json = json.dumps(parsed_json, indent=2)
                     formatted_parts.append(formatted_json)
                 except json.JSONDecodeError:
-                    # If not JSON, just use the text as-is
+                    # 若非 JSON，则原样使用
                     formatted_parts.append(text_content)
             else:
-                # For other dict structures, format as JSON
+                # 其它字典结构按 JSON 打印
                 formatted_parts.append(json.dumps(item, indent=2))
         return "\n\n".join(formatted_parts)
     else:
-        # For other types, convert to JSON
+        # 其他类型转 JSON 字符串
         return json.dumps(content, indent=2)
 
 
 def get_user_input(console: Console) -> str:
     """
-    Get user input and display it in a rich panel in one step.
-    Returns the user input string.
+    获取用户输入并以面板形式展示，同时返回输入字符串。
     """
     user_input = Prompt.ask("\n[bold yellow]You[/bold yellow]", console=console)
     print()
@@ -157,15 +176,15 @@ def parse_and_print_message(
         print_stats: bool = False
         ):
     """
-    Parse and print a message based on its type and content.
+    按消息类型解析并打印内容。
     """
-    # Assistant messages include TextBlock, ToolUseBlock, ThinkingBlock, and ToolResultBlock
+    # 助手消息可能包含 TextBlock、ToolUseBlock、ThinkingBlock、ToolResultBlock
     # https://docs.claude.com/en/api/agent-sdk/python#content-block-types
     if isinstance(message, SystemMessage):
         if message.subtype == "compact_boundary":
             print_rich_message(
                 "system", 
-                f"Compaction completed \nPre-compaction tokens: {message.data["compact_metadata"]["pre_tokens"]} \nTrigger: {message.data["compact_metadata"]["trigger"]}",
+                f"压缩完成 \n压缩前令牌数: {message.data['compact_metadata']['pre_tokens']} \n触发来源: {message.data['compact_metadata']['trigger']}",
                 console
                 )
         else:

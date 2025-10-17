@@ -1,23 +1,24 @@
 """
-Subagents are a way to delegate tasks to specialized agents.
+子代理用于将任务委派给专门的智能体。
 
-Advantages include:
-- Context isolation: Subagents have their own context and do not share it with the main agent.
-- Tool isolation: Subagents can have their own set of allowed tools, which can be useful for security and manageability.
-- Parallelization: Subagents can run in parallel, which can improve performance.
+优势包括：
+- 上下文隔离：子代理拥有独立上下文，不与主代理共享。
+- 工具隔离：子代理可配置独立工具集合，更利于安全与管理。
+- 并行执行：子代理可并发运行，从而提升效率。
 
-For more details, see: https://docs.claude.com/en/api/agent-sdk/subagents
+更多说明参阅：https://docs.claude.com/en/api/agent-sdk/subagents
 """
 
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, AgentDefinition
 from rich import print
 from rich.console import Console
-from cli_tools import parser, print_rich_message, parse_and_print_message, get_user_input
+from cli_tools import parser, print_rich_message, parse_and_print_message, get_user_input, print_anthropic_env
 from dotenv import load_dotenv
 load_dotenv()
 
 
 async def main():
+    print_anthropic_env("当前 Anthropic 环境变量")
     console = Console()
     args = parser.parse_args()
     
@@ -32,7 +33,7 @@ async def main():
             'MultiEdit',
             'Grep',
             'Glob',
-            # Task tool is required to use subagents!
+            # 使用子代理必须启用 Task 工具！
             'Task',
             'TodoWrite',
             'WebSearch',
@@ -59,7 +60,7 @@ async def main():
             'mcp__Playwright__browser_tabs',
             'mcp__Playwright__browser_wait_for',
         ],
-        # We can also specify allowed tools for subagents, by default they inherit all tools including MCP tools.
+        # 亦可为子代理单独限定可用工具；默认会继承全部（含 MCP 工具）。
         agents={
             "youtube-analyst": AgentDefinition(
                 description="An expert at analyzing a user's Youtube channel performance. The analyst will produce a markdown report in the /docs directory.",
@@ -113,7 +114,7 @@ async def main():
                 ]
             )
         },
-        # Note: Playwright requires Node.js and Chrome to be installed!
+        # 提示：Playwright 需提前安装 Node.js 与 Chrome！
         mcp_servers={
             "Playwright": {
                 "command": "npx",
@@ -141,7 +142,7 @@ async def main():
             await client.query(input_prompt)
 
             async for message in client.receive_response():
-                # Uncomment to print raw messages for debugging
+                # 如需调试可取消注释打印原始消息
                 # print(message)
                 parse_and_print_message(message, console)
 

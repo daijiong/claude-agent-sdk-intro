@@ -1,18 +1,19 @@
 """
-MCPs can be defined programmatically or loaded from an .mcp.json file.
+可以通过代码定义 MCP，或从 .mcp.json 文件加载。
 
-For more details, see: https://docs.claude.com/en/api/agent-sdk/mcp
+更多说明参阅：https://docs.claude.com/en/api/agent-sdk/mcp
 """
 
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 from rich import print
 from rich.console import Console
-from cli_tools import parser, print_rich_message, parse_and_print_message, get_user_input
+from cli_tools import parser, print_rich_message, parse_and_print_message, get_user_input, print_anthropic_env
 from dotenv import load_dotenv
 load_dotenv()
 
 
 async def main():
+    print_anthropic_env("当前 Anthropic 环境变量")
     console = Console()
     args = parser.parse_args()
 
@@ -26,12 +27,12 @@ async def main():
             'MultiEdit',
             'Grep',
             'Glob',
-            # Notice that you MUST allow MCP tools otherwise they will not be available by default.
+            # 注意：必须显式允许 MCP 工具，否则默认无法使用。
             # 'mcp__Playwright__browser_navigate'
         ],
         permission_mode="acceptEdits",
         setting_sources=["project"],
-        # Note: Playwright requires Node.js and Chrome to be installed!
+        # 提示：Playwright 需提前安装 Node.js 和 Chrome！
         mcp_servers={
             "Playwright": {
                 "command": "npx",
@@ -59,7 +60,7 @@ async def main():
             await client.query(input_prompt)
 
             async for message in client.receive_response():
-                # Uncomment to print raw messages for debugging
+                # 如需调试可取消注释打印原始消息
                 # print(message)
                 parse_and_print_message(message, console)
 

@@ -1,29 +1,29 @@
 {
-  "outputStyle": "Personal Assistant",
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "afplay /System/Library/Sounds/Funk.aiff"
-          },
-          {
-            "type": "command",
-            "command": "uv run .claude/hooks/log_agent_actions.py"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "afplay /System/Library/Sounds/Purr.aiff"
-          }
-        ]
-      }
-    ]
-  }
+  "outputStyle": "Personal Assistant"
+  // "hooks": {
+  //   "Stop": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "type": "command",
+  //           "command": "afplay /System/Library/Sounds/Funk.aiff"
+  //         },
+  //         {
+  //           "type": "command",
+  //           "command": "uv run .claude/hooks/log_agent_actions.py"
+  //         }
+  //       ]
+  //     }
+  //   ],
+  //   "Notification": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "type": "command",
+  //           "command": "powershell -c (New-Object Media.SoundPlayer \"C:\\Windows\\Media\notify.wav\").PlaySync()"
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // }
 }

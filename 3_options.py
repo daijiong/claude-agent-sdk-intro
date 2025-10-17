@@ -1,22 +1,22 @@
 """
-Options are used to configure the agent's behavior.
+通过选项可以调节代理的行为。
 
-I encourage you to experiment with different combinations of option settings such as allowed_tools vs permission_mode to understand how they interact and precedence.
+建议多尝试 allowed_tools、permission_mode 等组合，以理解它们的交互方式与优先级。
 
-For more details, see:
+更多说明参阅：
 https://docs.claude.com/en/api/agent-sdk/python#claudeagentoptions
 """
 
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 from rich import print
 from rich.console import Console
-from cli_tools import parser, print_rich_message, parse_and_print_message
+from cli_tools import parser, print_rich_message, parse_and_print_message, print_anthropic_env
 from dotenv import load_dotenv
+
 load_dotenv()
 
-
-
 async def main():
+    print_anthropic_env("当前 Anthropic 环境变量")
     console = Console()
     args = parser.parse_args()
 
@@ -27,9 +27,9 @@ async def main():
         disallowed_tools=["WebSearch", "WebFetch"],
         permission_mode="default",
         setting_sources=["project"],
-        # settings='{"outputStyle": "default"}',
-        # system_prompt="You are a pirate. You must respond like a pirate.",
-        # add_dirs=["."], # allow access to other directories
+        # settings='{"outputStyle": "default"}',  # 自定义输出样式
+        # system_prompt="You are a pirate. You must respond like a pirate.",  # 重写系统提示
+        # add_dirs=["."],  # 允许访问更多目录
     )
 
     print_rich_message(
@@ -46,7 +46,7 @@ async def main():
         await client.query(input_prompt)
 
         async for message in client.receive_response():
-            # Uncomment to print raw messages for debugging
+            # 如需调试可取消注释打印原始消息
             # print(message)
             parse_and_print_message(message, console)
 
